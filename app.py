@@ -1,52 +1,71 @@
 import streamlit as st
 import requests
 
-# Configura la pagina
+# ----------------------------
+# CONFIGURAZIONE PAGINA
+# ----------------------------
 st.set_page_config(
-    page_title="ATHENA",
+    page_title="ATHENA – Supporto MDT IPMN",
     layout="centered"
 )
 
-# Titolo della pagina
 st.title("🧠 ATHENA – Supporto MDT")
-st.markdown(
-    "Inserisci il **caso clinico** come in una discussione MDT."
-)
+st.markdown("Inserisci il caso clinico come in una discussione MDT.")
 
-# Text area per il caso clinico
+# ----------------------------
+# INPUT CASO CLINICO
+# ----------------------------
 case_text = st.text_area(
     "Caso clinico",
     height=200,
-    placeholder="Esempio:\nRMN pancreas: BD-IPMN corpo 32 mm..."
+    placeholder=(
+        "Esempio:\n"
+        "RMN pancreas: BD-IPMN corpo 32 mm, MPD 6 mm, nodulo murale 4 mm.\n"
+        "CA19-9 45. Paziente 74 anni con BPCO."
+    )
 )
 
-# Bottone per inviare il caso
+# ----------------------------
+# BOTTONE DI INVIO
+# ----------------------------
 if st.button("Valuta caso"):
     if not case_text.strip():
         st.warning("Inserisci un caso clinico.")
     else:
         with st.spinner("ATHENA sta ragionando..."):
             try:
-                # URL del webhook di n8n (usa il link giusto da n8n)
-                url = url = "https://claudioricci6.app.n8n.cloud/webhook-test/ATHENA"
+                # 🔴 CAMBIA QUESTO URL CON IL TUO WEBHOOK n8n
+                url = "https://TUO-N8N.app.n8n.cloud/webhook/athena-ipmn"
 
-                
-                # Fai la richiesta al webhook
                 response = requests.post(
                     url,
-                    json={"text": case_text},  # Passa il testo clinico
+                    json={"text": case_text},
                     timeout=120
                 )
-                
-                # Gestisci la risposta
+
                 response.raise_for_status()
                 result = response.json()
 
                 st.success("Valutazione MDT completata")
 
-                # Mostra il risultato del ragionamento MDT
+                # ----------------------------
+                # OUTPUT MDT
+                # ----------------------------
                 st.markdown("## 📋 Risultato MDT")
-                st.markdown(result.get("mdt_output", "Nessun output"))
+
+                output = result.get("mdt_output")
+
+                if output:
+                    # Output Markdown (titoli, liste, sezioni)
+                    st.markdown(output)
+                else:
+                    st.error("Output vuoto ricevuto dal backend.")
+                    st.markdown("### Debug risposta completa:")
+                    st.json(result)
 
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error("Errore nella chiamata al backend")
+                st.exception(e)
+
+
+      
