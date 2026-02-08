@@ -35,7 +35,7 @@ if st.button("Valuta caso"):
         with st.spinner("ATHENA sta ragionando..."):
             try:
                 # 🔴 CAMBIA QUESTO URL CON IL TUO WEBHOOK n8n
-                url = "https://TUO-N8N.app.n8n.cloud/webhook/athena-ipmn"
+                url = "https://claudioricci6.app.n8n.cloud/webhook-test/ATHENA"
 
                 response = requests.post(
                     url,
