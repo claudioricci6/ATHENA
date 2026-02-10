@@ -5,7 +5,7 @@ import json
 # =========================
 # CONFIG
 # =========================
-WEBHOOK_URL = "https://claudioricci6.app.n8n.cloud/webhook-test/ATHENA"
+WEBHOOK_URL = "https://claudioricci6.app.n8n.cloud/webhook/ATHENA"
 
 st.set_page_config(
     page_title="ATHENA – IPMN MDT",
