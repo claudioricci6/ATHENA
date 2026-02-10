@@ -1,53 +1,77 @@
 import streamlit as st
 import requests
+import json
 
-# Configura la pagina
+# =========================
+# CONFIG
+# =========================
+WEBHOOK_URL = "https://claudioricci6.app.n8n.cloud/webhook-test/ATHENA"
+
 st.set_page_config(
-    page_title="ATHENA – MDT IPMN",
-    layout="centered"
+    page_title="ATHENA – IPMN MDT",
+    layout="wide"
 )
 
-# Titolo della pagina
-st.title("🧠 ATHENA – Supporto MDT IPMN")
-st.markdown(
-    "Inserisci il **caso clinico** come in una discussione MDT."
+# =========================
+# UI
+# =========================
+st.title("🧠 ATHENA – IPMN MDT Decision Support")
+st.caption("Inserisci il caso clinico come faresti nella chat MDT. Testo libero.")
+
+caso = st.text_area(
+    label="Caso clinico",
+    height=220,
+    placeholder=(
+        "Esempio:\n"
+        "Paziente di 80 anni, BD-IPMN 30 mm, MPD 10 mm, "
+        "nodulo murale 6 mm, CA19-9 100, asintomatico."
+    )
 )
 
-# Text area per il caso clinico
-case_text = st.text_area(
-    "Caso clinico",
-    height=200,
-    placeholder="Esempio:\nRMN pancreas: BD-IPMN corpo 32 mm..."
-)
+valuta = st.button("🔍 Valuta caso MDT")
 
-# Bottone per inviare il caso
-if st.button("Valuta caso"):
-    if not case_text.strip():
-        st.warning("Inserisci un caso clinico.")
+# =========================
+# LOGICA
+# =========================
+if valuta:
+    if not caso.strip():
+        st.warning("Inserisci un caso clinico prima di procedere.")
     else:
-        with st.spinner("ATHENA sta ragionando..."):
+        with st.spinner("Analisi MDT in corso..."):
             try:
-                # URL del webhook di n8n (usa il link giusto da n8n)
-                url = "https://claudioricci6.app.n8n.cloud/webhook/ATHENA"
-
-                
-                # Fai la richiesta al webhook
                 response = requests.post(
-                    url,
-                    json={"text": case_text},  # Passa il testo clinico
-                    timeout=120
+                    WEBHOOK_URL,
+                    json={"message": caso},
+                    timeout=90
                 )
-                
-                # Gestisci la risposta
+
                 response.raise_for_status()
-                result = response.json()
+                data = response.json()
 
-                st.success("Valutazione MDT completata")
+                st.divider()
+                st.subheader("📋 Valutazione MDT")
 
-                # Mostra il risultato del ragionamento MDT
-                st.markdown("## 📋 Risultato MDT")
-                st.markdown(result.get("mdt_output", "Nessun output"))
+                # Mostra JSON strutturato (robusto a qualsiasi output)
+                st.json(data["output"])
 
+            except requests.exceptions.Timeout:
+                st.error("Timeout: il backend n8n non ha risposto in tempo.")
+            except requests.exceptions.HTTPError as e:
+                st.error(f"Errore HTTP dal backend: {e}")
+            except KeyError:
+                st.error(
+                    "Risposta non valida dal backend.\n"
+                    "Assicurati che Respond to Webhook restituisca:\n"
+                    "{ \"output\": {...} }"
+                )
             except Exception as e:
-                st.error(f"Errore: {e}")
+                st.error(f"Errore imprevisto: {e}")
 
+# =========================
+# FOOTER
+# =========================
+st.divider()
+st.caption(
+    "⚠️ Decision support non autonomo. "
+    "Da utilizzare in contesto MDT secondo linee guida."
+)
